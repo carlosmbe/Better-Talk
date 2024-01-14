@@ -17,9 +17,10 @@ struct ContentView: View {
             
             backgroundGradient
                 .ignoresSafeArea()
-                .hueRotation(.degrees(animateGradient ? 45 : 0))
+                .hueRotation(.degrees(animateGradient ? 0 : 45))
+                .animation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true), value: animateGradient)
                 .onAppear {
-                    withAnimation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true)) {
+                    withAnimation {
                         animateGradient.toggle()
                     }
                 }

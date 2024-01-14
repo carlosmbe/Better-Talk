@@ -39,16 +39,9 @@ let package = Package(
             appCategory: .lifestyle
         )
     ],
-    dependencies: [
-        .package(url: "https://github.com/dmrschmidt/DSWaveformImage", "14.2.1"..<"15.0.0")
-    ],
     targets: [
         .executableTarget(
             name: "AppModule",
-            dependencies: [
-                .product(name: "DSWaveformImage", package: "dswaveformimage"),
-                .product(name: "DSWaveformImageViews", package: "dswaveformimage")
-            ],
             path: "."
         )
     ]

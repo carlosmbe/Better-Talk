@@ -14,7 +14,7 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
     var analysis = SpeechAnalysis()
     
     // Filler words analysis
-    let fillerWords = ["um", "uh", "like", "you know", "so", "actually", "basically", "I mean"]
+    var fillerWords = ["um", "uh", "like", "you know", "so", "actually", "basically", "I mean"]
     analysis.fillerWordCount = transcription.segments.filter {
         fillerWords.contains($0.substring.lowercased())
     }.count

@@ -9,14 +9,6 @@ import SwiftUI
 import Speech
 
 
-
-struct HelperViews: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
-
-
 struct StartButtonView: View {
     var body: some View {
         
@@ -116,7 +108,7 @@ struct PracticeButtonView: View {
 struct AnalysisCustomizationView: View {
     @Environment(\.presentationMode) var presentationMode
     
-    @Binding var analyzeFillerWords: Bool
+ 
     @Binding var analyzeRateOfSpeech: Bool
     @Binding var analyzePitch: Bool
     @Binding var analyzePause: Bool
@@ -124,11 +116,6 @@ struct AnalysisCustomizationView: View {
     var body: some View {
         NavigationView {
             List {
-                Toggle("Analyze Filler Words", isOn: $analyzeFillerWords)
-                Text("Detect and analyze the use of non-essential words or sounds.")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
                 Toggle("Analyze Rate of Speech", isOn: $analyzeRateOfSpeech)
                 Text("Evaluate the speed at which you speak.")
                     .font(.caption)
@@ -180,39 +167,46 @@ struct AnalysisResultView: View {
  */
 
  
- struct AnalysisResultView: View {
-     @Binding var analysisResult: String
-     @Environment(\.presentationMode) var presentationMode
+struct AnalysisResultView: View {
+    @Binding var analysisResult: String
+    @Environment(\.presentationMode) var presentationMode
+    
+    let titleGradient = LinearGradient(colors: [.pink,.cyan,.mint], startPoint: .bottomLeading, endPoint: .topTrailing)
 
-     var body: some View {
-         NavigationView {
-             ScrollView {
-                 VStack(alignment: .leading, spacing: 10) {
-                     ForEach(analysisResult.components(separatedBy: "\n\n"), id: \.self) { paragraph in
-                         Text(paragraph)
-                             .padding()
-                             .frame(maxWidth: .infinity, alignment: .leading)
-                             .background(Color.secondary.opacity(0.1))
-                             .cornerRadius(10)
-                             .font(.system(size: 16, weight: .medium, design: .rounded))
-                     }
-                 }
-                 .padding()
-             }
-             .navigationTitle("Speech Analysis")
-             .navigationBarTitleDisplayMode(.inline)
-             .toolbar {
-                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                     Text("Close")
-                         .fontWeight(.semibold)
-                 }
-             }
-         }
-     }
- }
-
- 
-
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(analysisResult.components(separatedBy: "\n\n"), id: \.self) { paragraph in
+                        Text(paragraph)
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.secondary.opacity(0.1))
+                            .cornerRadius(10)
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                    }
+                }
+                
+                Text("Would You Like To Polish Up Those Fundamentals?")
+                    .foregroundStyle(titleGradient)
+                    .font(.title2)
+                    .padding()
+                
+                FundamentalsButtonView()
+                
+                .padding()
+            }
+            .navigationTitle("Speech Analysis")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    Text("Close")
+                        .fontWeight(.semibold)
+                }
+            }
+        }
+    }
+}
 
 func requestSpeechPermission(completion: @escaping (Bool) -> Void) {
     SFSpeechRecognizer.requestAuthorization { authStatus in
@@ -222,6 +216,3 @@ func requestSpeechPermission(completion: @escaping (Bool) -> Void) {
     }
 }
 
-#Preview {
-    HelperViews()
-}

@@ -19,9 +19,9 @@ struct PracticeView: View {
     
     // Additional states for analysis preferences can be added here
     
-    let backgroundGradient = LinearGradient(colors: [.pink,.cyan,.mint], startPoint: .topLeading, endPoint: .bottomTrailing)
+    var backgroundGradient = LinearGradient(colors: [.pink,.indigo, .accentColor], startPoint: .topLeading, endPoint: .bottomTrailing)
+    @State private var animatePracGradient = false
     
-    @State private var analyzeFillerWords = true
     @State private var analyzeRateOfSpeech = true
     @State private var analyzePitch = true
     @State private var analyzePause = true
@@ -29,7 +29,15 @@ struct PracticeView: View {
     var body: some View {
         ZStack {
             
-            backgroundGradient.ignoresSafeArea()
+            backgroundGradient
+                 .ignoresSafeArea()
+                 .hueRotation(.degrees(animatePracGradient ? 0 : 45))
+                 .animation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true), value: animatePracGradient)
+                 .onAppear {
+                     withAnimation {
+                         animatePracGradient.toggle()
+                     }
+                 }
             
             VStack {
                 Text("Practice Your Presentation Skill(z)")
@@ -83,8 +91,7 @@ struct PracticeView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .sheet(isPresented: $showCustomization) {
-                    AnalysisCustomizationView(analyzeFillerWords: $analyzeFillerWords,
-                                              analyzeRateOfSpeech: $analyzeRateOfSpeech,
+                    AnalysisCustomizationView(analyzeRateOfSpeech: $analyzeRateOfSpeech,
                                               analyzePitch: $analyzePitch,
                                               analyzePause: $analyzePause)
                 }
@@ -93,9 +100,8 @@ struct PracticeView: View {
                 
                 
                 Text("Feedback will magically pop up after analysis")
-                    .foregroundColor(.gray)
                     .padding()
-                    .border(Color.gray, width: 1)
+                    .border(Color.teal, width: 1)
                 
                 
                 Spacer()
@@ -131,25 +137,38 @@ struct PracticeView: View {
                     resultString += analysis.averagePitch > 0 ? "  - Good job on varying your pitch to keep the speech engaging.\n\n" : "  - Try to vary your pitch more to add expressiveness to your speech.\n\n"
                     */
                     
-                    resultString += "• Pitch Variation Analysis:\n"
-                    resultString += "  - Minimum Pitch: \(String(format: "%.2f", analysis.minPitch)) Hz\n"
-                    resultString += "  - Maximum Pitch: \(String(format: "%.2f", analysis.maxPitch)) Hz\n"
-                  
-
-                    if analysis.maxPitch - analysis.minPitch > 0 {
-                          resultString += "  - Nice! A good range of pitch variation can add expressiveness to your speech.\n\n"
-                      } else {
-                          resultString += "  - Consider varying your pitch more for a dynamic speaking style.\n\n"
-                      }
+                    if analyzePitch{
+                        
+                        resultString += "• Pitch Variation Analysis:\n"
+                        resultString += "  - Minimum Pitch: \(String(format: "%.2f", analysis.minPitch)) Hz\n"
+                        resultString += "  - Maximum Pitch: \(String(format: "%.2f", analysis.maxPitch)) Hz\n"
+                        
+                        
+                        if analysis.maxPitch - analysis.minPitch > 0 {
+                            resultString += "  - Nice! A good range of pitch variation can add expressiveness to your speech.\n\n"
+                        } else {
+                            resultString += "  - Consider varying your pitch more for a dynamic speaking style.\n\n"
+                        }
+                        
+                    }
                     
-                    // Rate of Speech Variation
-                    resultString += "• Speech Rate Variation: Your rate of speech varied with a standard deviation of \(String(format: "%.2f", analysis.rateOfSpeechVariation)).\n"
-                    resultString += analysis.rateOfSpeechVariation > 1 ? "  - Great! Varying your speaking rate can make your speech more engaging.\n\n" : "  - Try varying your speaking speed to maintain listener interest.\n\n"
+                    if analyzeRateOfSpeech{
+                        
+                        // Rate of Speech Variation
+                        resultString += "• Speech Rate Variation: Your rate of speech varied with a standard deviation of \(String(format: "%.2f", analysis.rateOfSpeechVariation)).\n"
+                        resultString += analysis.rateOfSpeechVariation > 1 ? "  - Great! Varying your speaking rate can make your speech more engaging.\n\n" : "  - Try varying your speaking speed to maintain listener interest.\n\n"
+                        
+                    }
 
-                    // Average Pause Length
-                    let formattedPauseLength = String(format: "%.2f", analysis.averagePauseLength)
-                    resultString += "• Pause Usage: Your average pause length was \(formattedPauseLength) seconds.\n"
-                    resultString += analysis.averagePauseLength > 1 ? "  - Great! Effective use of pauses can help emphasize points." : "  - Consider using pauses more effectively to emphasize your points."
+                    
+                    if analyzePause{
+                        
+                        // Average Pause Length
+                        let formattedPauseLength = String(format: "%.2f", analysis.averagePauseLength)
+                        resultString += "• Pause Usage: Your average pause length was \(formattedPauseLength) seconds.\n"
+                        resultString += analysis.averagePauseLength > 1 ? "  - Great! Effective use of pauses can help emphasize points." : "  - Consider using pauses more effectively to emphasize your points."
+                        
+                    }
                     
                     self.speechAnalysisResult = resultString
                     self.showAnalysis = true
