@@ -12,39 +12,40 @@ import AVFoundation
 import DSWaveformImage
 import DSWaveformImageViews
 
-struct AudioRecorderView: View {
-    @StateObject private var audioRecorder = AudioRecorder()
-    
 
+struct VolumeBar: View {
+    var level: CGFloat // Expected to be in the range 0...1
+    private let totalDots = 20
+    private let dotDiameter: CGFloat = 5
+    private let spacing: CGFloat = 2
+    
     var body: some View {
-        VStack {
-            VolumeBarsView(audioRecorder: audioRecorder)
-            
-            Button(action: {
-                if audioRecorder.isRecording {
-                    audioRecorder.stopRecording()
-                } else {
-                    audioRecorder.startRecording()
-                }
-            }) {
-                Text(audioRecorder.isRecording ? "Stop Recording" : "Start Recording")
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(audioRecorder.isRecording ? Color.red : Color.blue)
-                    .clipShape(Capsule())
+        VStack(spacing: spacing) {
+            ForEach(0..<totalDots, id: \.self) { index in
+                Circle()
+                    .frame(width: dotDiameter, height: dotDiameter)
+                    .foregroundColor(index < Int(level * CGFloat(totalDots)) ? .green : .gray)
+                    .opacity(index < Int(level * CGFloat(totalDots)) ? 1 : 0.3)
             }
         }
-        .padding()
+        // Explicitly set the height of the VolumeBar
+        .frame(height: CGFloat(totalDots) * (dotDiameter + spacing))
     }
 }
 
-struct AudioRecorderView_Previews: PreviewProvider {
-    static var previews: some View {
-        AudioRecorderView()
+struct VolumeBarsView: View {
+    @ObservedObject var audioRecorder: AudioRecorder
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<10) { _ in
+                VolumeBar(level: CGFloat(self.audioRecorder.samples.first ?? 0))
+            }
+        }
+        // Reduce padding here if needed
+        .padding([.top, .bottom], 10) // Example: Only top and bottom padding
     }
 }
-
-
 
 class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     @Published var isRecording = false
@@ -159,37 +160,5 @@ class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
-    }
-}
-
-struct VolumeBar: View {
-    var level: CGFloat // Expected to be in the range 0...1
-    private let totalDots = 20
-    private let dotDiameter: CGFloat = 5
-    private let spacing: CGFloat = 2
-    
-    var body: some View {
-        VStack {
-            ForEach(0..<totalDots, id: \.self) { index in
-                Circle()
-                    .frame(width: dotDiameter, height: dotDiameter)
-                    .foregroundColor(index < Int(level * CGFloat(totalDots)) ? .green : .gray)
-                    .opacity(index < Int(level * CGFloat(totalDots)) ? 1 : 0.3)
-            }
-        }
-        .frame(height: CGFloat(totalDots) * (dotDiameter + spacing))
-    }
-}
-
-
-struct VolumeBarsView: View {
-    @ObservedObject var audioRecorder: AudioRecorder
-    
-    var body: some View {
-        HStack(spacing: 4) {
-            ForEach(0..<10) { _ in
-                VolumeBar(level: CGFloat(self.audioRecorder.samples.first ?? 0))
-            }
-        }
     }
 }

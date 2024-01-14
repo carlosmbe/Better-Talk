@@ -69,8 +69,6 @@ struct FundamentalsView: View {
             Text("Practice reading a passage at different speeds. Notice how the rate of your speech affects comprehension and audience engagement.")
         case "Volume & Pitch":
             Text("Experiment with different volumes and pitches. How does changing these elements impact the way your message is received?")
-        case "Tonality & Melody":
-            Text("Your tone can convey emotion and emphasis. Practice varying your tonality to express different feelings or highlights.")
         case "Pauses":
             Text("Strategic pauses can add impact to your speech. Practice pausing after key points for effect.")
         case "Filler Words":

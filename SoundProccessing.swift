@@ -23,22 +23,28 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
     var totalPitch: Float = 0
     var speechRates: [Float] = []
 
+    var pitchValues: [Double] = []
     for segment in transcription.segments {
-        let speechRate = Float(segment.duration / Double(segment.substring.count))
-        speechRates.append(speechRate)
-
+        
+        if segment.duration > 0 {
+            let rate = Float(segment.substring.split(separator: " ").count) / Float(segment.duration)
+            speechRates.append(rate)
+        }
+        
         if let voiceAnalytics = segment.voiceAnalytics {
-            let pitchValues = voiceAnalytics.pitch.acousticFeatureValuePerFrame
-            if !pitchValues.isEmpty {
-                let sumPitch = pitchValues.reduce(0, { $0 + $1 })
-                let averagePitchInSegment = Double(sumPitch) / Double(pitchValues.count)
-                totalPitch += Float(averagePitchInSegment)
-            }
+            pitchValues += voiceAnalytics.pitch.acousticFeatureValuePerFrame.map { Double($0) }
         }
     }
 
+    if !pitchValues.isEmpty {
+        analysis.minPitch = Float(pitchValues.min() ?? 0)
+        analysis.maxPitch = Float(pitchValues.max() ?? 0)
+        analysis.averagePitch = Float(pitchValues.reduce(0, +) / Double(pitchValues.count))
+    }
     analysis.averagePitch = totalPitch / Float(transcription.segments.count)
-    analysis.rateOfSpeechVariation = calculateVariation(speechRates)
+    
+    analysis.rateOfSpeechVariation = speechRates.isEmpty ? 0 : calculateVariation(speechRates)
+
 
     // Pause analysis
     var pauseLengths: [TimeInterval] = []
@@ -54,6 +60,7 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
 
     return analysis
 }
+
 func calculateVariation(_ rates: [Float]) -> Float {
     let mean = rates.reduce(0, +) / Float(rates.count)
     let sumOfSquaredMeanDiff = rates.map { pow($0 - mean, 2) }.reduce(0, +)
@@ -63,6 +70,8 @@ func calculateVariation(_ rates: [Float]) -> Float {
 
 struct SpeechAnalysis {
     var fillerWordCount: Int = 0
+    var minPitch: Float = 0
+    var maxPitch: Float = 0
     var averagePitch: Float = 0
     var rateOfSpeechVariation: Float = 0
     var averagePauseLength: TimeInterval = 0

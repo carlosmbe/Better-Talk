@@ -118,9 +118,7 @@ struct AnalysisCustomizationView: View {
     
     @Binding var analyzeFillerWords: Bool
     @Binding var analyzeRateOfSpeech: Bool
-    @Binding var analyzeVolume: Bool
-    @Binding var analyzePitchAndMelody: Bool
-    @Binding var analyzeTonality: Bool
+    @Binding var analyzePitch: Bool
     @Binding var analyzePause: Bool
 
     var body: some View {
@@ -136,20 +134,12 @@ struct AnalysisCustomizationView: View {
                     .font(.caption)
                     .foregroundColor(.gray)
 
-                Toggle("Analyze Volume", isOn: $analyzeVolume)
-                Text("Assess the loudness or softness of your speech.")
-                    .font(.caption)
-                    .foregroundColor(.gray)
 
-                Toggle("Analyze Pitch & Melody", isOn: $analyzePitchAndMelody)
+                Toggle("Analyze Pitch & Melody", isOn: $analyzePitch)
                 Text("Analyze the high and low tones in your speech.")
                     .font(.caption)
                     .foregroundColor(.gray)
 
-                Toggle("Analyze Tonality", isOn: $analyzeTonality)
-                Text("Examine the quality and emotion conveyed in your voice.")
-                    .font(.caption)
-                    .foregroundColor(.gray)
 
                 Toggle("Analyze Pause", isOn: $analyzePause)
                 Text("Look at the use and effectiveness of pauses in your speech.")
@@ -164,7 +154,64 @@ struct AnalysisCustomizationView: View {
     }
 }
 
+/*Alternative ANAL
+struct AnalysisResultView: View {
+    @Binding var analysisResult: String
+    @Environment(\.presentationMode) var presentationMode
 
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                Text(analysisResult)
+                    .padding()
+                    .font(.system(size: 16))  // Set a suitable font size
+                    .foregroundColor(.primary)  // Choose a suitable text color
+            }
+            .navigationTitle("Speech Analysis")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                Button("Close") {
+                    presentationMode.wrappedValue.dismiss()
+                }
+            }
+        }
+    }
+}
+ */
+
+ 
+ struct AnalysisResultView: View {
+     @Binding var analysisResult: String
+     @Environment(\.presentationMode) var presentationMode
+
+     var body: some View {
+         NavigationView {
+             ScrollView {
+                 VStack(alignment: .leading, spacing: 10) {
+                     ForEach(analysisResult.components(separatedBy: "\n\n"), id: \.self) { paragraph in
+                         Text(paragraph)
+                             .padding()
+                             .frame(maxWidth: .infinity, alignment: .leading)
+                             .background(Color.secondary.opacity(0.1))
+                             .cornerRadius(10)
+                             .font(.system(size: 16, weight: .medium, design: .rounded))
+                     }
+                 }
+                 .padding()
+             }
+             .navigationTitle("Speech Analysis")
+             .navigationBarTitleDisplayMode(.inline)
+             .toolbar {
+                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                     Text("Close")
+                         .fontWeight(.semibold)
+                 }
+             }
+         }
+     }
+ }
+
+ 
 
 
 func requestSpeechPermission(completion: @escaping (Bool) -> Void) {
