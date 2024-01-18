@@ -108,7 +108,7 @@ struct PracticeButtonView: View {
 struct AnalysisCustomizationView: View {
     @Environment(\.presentationMode) var presentationMode
     
- 
+    let fillerWord = false
     @Binding var analyzeRateOfSpeech: Bool
     @Binding var analyzePitch: Bool
     @Binding var analyzePause: Bool
@@ -116,6 +116,14 @@ struct AnalysisCustomizationView: View {
     var body: some View {
         NavigationView {
             List {
+                    
+                
+                Text("Filler Words")
+                
+                Text("Looking for: um, uh, like, you know, so, actually, basically, I mean")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
                 Toggle("Analyze Rate of Speech", isOn: $analyzeRateOfSpeech)
                 Text("Evaluate the speed at which you speak.")
                     .font(.caption)
@@ -137,46 +145,28 @@ struct AnalysisCustomizationView: View {
             .navigationBarItems(trailing: Button("Close") {
                             presentationMode.wrappedValue.dismiss()
                         })
-        }
+        } 
+    
+        
     }
 }
-
-/*Alternative ANAL
-struct AnalysisResultView: View {
-    @Binding var analysisResult: String
-    @Environment(\.presentationMode) var presentationMode
-
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                Text(analysisResult)
-                    .padding()
-                    .font(.system(size: 16))  // Set a suitable font size
-                    .foregroundColor(.primary)  // Choose a suitable text color
-            }
-            .navigationTitle("Speech Analysis")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                Button("Close") {
-                    presentationMode.wrappedValue.dismiss()
-                }
-            }
-        }
-    }
-}
- */
 
  
 struct AnalysisResultView: View {
     @Binding var analysisResult: String
-    @Environment(\.presentationMode) var presentationMode
     
-    let titleGradient = LinearGradient(colors: [.pink,.cyan,.mint], startPoint: .bottomLeading, endPoint: .topTrailing)
+    @Binding var transcriptResult: String
+    
+    @State private var showTranscript = false
+    
+    @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    
+                    
                     ForEach(analysisResult.components(separatedBy: "\n\n"), id: \.self) { paragraph in
                         Text(paragraph)
                             .padding()
@@ -185,17 +175,43 @@ struct AnalysisResultView: View {
                             .cornerRadius(10)
                             .font(.system(size: 16, weight: .medium, design: .rounded))
                     }
-                }
-                
-                Text("Would You Like To Polish Up Those Fundamentals?")
-                    .foregroundStyle(titleGradient)
-                    .font(.title2)
+                    
+                    Toggle("Would You Like To See a Transcript of Your Recording?", isOn: $showTranscript)
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(10)
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                    
+                    if showTranscript{
+                        Text("Trasncript: \(transcriptResult)")
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.secondary.opacity(0.1))
+                            .cornerRadius(10)
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                    }
+                    
+                    HStack{
+                        Text("Would You Like To Polish Up Those Fundamentals?  ")
+                            .font(.title2)
+                        
+                        FundamentalsButtonView()
+                    }
                     .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(10)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    
+                    
+                }.background(Color.clear)
+                    
                 
-                FundamentalsButtonView()
-                
-                .padding()
             }
+            
+            .background(LinearGradient(colors: [.clear,.indigo, .accentColor, .clear], startPoint: .topLeading, endPoint: .bottomTrailing))
+            
             .navigationTitle("Speech Analysis")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -216,3 +232,45 @@ func requestSpeechPermission(completion: @escaping (Bool) -> Void) {
     }
 }
 
+
+
+struct GlassModifier: ViewModifier {
+    let cornerRadius: CGFloat
+    let fill: Color
+    let opacity: CGFloat
+    let shadowRadius: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                GlassView(cornerRadius: cornerRadius, fill: fill, opacity: opacity, shadowRadius: shadowRadius)
+            }
+    }
+}
+
+extension View {
+    func glass(cornerRadius: CGFloat, fill: Color = .white, opacity: CGFloat = 0.25, shadowRadius: CGFloat = 10.0) -> some View {
+        modifier(GlassModifier(cornerRadius: cornerRadius, fill: fill, opacity: opacity, shadowRadius: shadowRadius))
+    }
+}
+
+struct GlassView: View {
+    let cornerRadius: CGFloat
+    let fill: Color
+    let opacity: CGFloat
+    let shadowRadius: CGFloat
+
+    init(cornerRadius: CGFloat, fill: Color = .white, opacity: CGFloat = 0.25, shadowRadius: CGFloat = 10.0) {
+        self.cornerRadius = cornerRadius
+        self.fill = fill
+        self.opacity = opacity
+        self.shadowRadius = shadowRadius
+    }
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .fill(fill)
+            .opacity(opacity)
+            .shadow(radius: shadowRadius)
+    }
+}

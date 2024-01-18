@@ -13,8 +13,10 @@ struct PracticeView: View {
     @State private var showCustomization = false
     
     @State private var showAnalysis = false
+    @State private var loadingAnalysis = false
     
     @State private var speechAnalysisResult: String = ""
+    @State private var transcriptResult = ""
     @ObservedObject var audioRecorder = AudioRecorder()
     
     // Additional states for analysis preferences can be added here
@@ -30,14 +32,14 @@ struct PracticeView: View {
         ZStack {
             
             backgroundGradient
-                 .ignoresSafeArea()
-                 .hueRotation(.degrees(animatePracGradient ? 0 : 45))
-                 .animation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true), value: animatePracGradient)
-                 .onAppear {
-                     withAnimation {
-                         animatePracGradient.toggle()
-                     }
-                 }
+                .ignoresSafeArea()
+                .hueRotation(.degrees(animatePracGradient ? 0 : 45))
+                .animation(.easeInOut(duration: 5.0).repeatForever(autoreverses: true), value: animatePracGradient)
+                .onAppear {
+                    withAnimation {
+                        animatePracGradient.toggle()
+                    }
+                }
             
             VStack {
                 Text("Practice Your Presentation Skill(z)")
@@ -45,11 +47,11 @@ struct PracticeView: View {
                     .fontWeight(.bold)
                     .padding()
                 
-                Text("You can talk about anything you want, practice a prepared speech, or answer an open-ended question.")
+                Text("Record your speech on any topic, be it a prepared presentation or an impromptu talk. Get comfortable with public speaking.")
                     .padding()
                 
                 
-                Text("Here's an example, If you could write a book, what genre and story would you choose to explore?")
+                Text("Example Prompt: 'If you were to write a book, what genre would it be and what story would you tell?'")
                     .italic()
                     .padding()
                     .overlay(
@@ -57,8 +59,8 @@ struct PracticeView: View {
                             .stroke(Color.blue, lineWidth: 2)
                     )
                 
-                Text("The longer the recording, the better the evaluation")
-                    .padding()
+                Text("Tip: A longer recording provides a more comprehensive analysis of your speaking style.")
+                           .padding()
                 
                 
                 // Record Button
@@ -98,16 +100,23 @@ struct PracticeView: View {
                 .padding()
                 
                 
-                
-                Text("Feedback will magically pop up after analysis")
-                    .padding()
-                    .border(Color.teal, width: 1)
+                if loadingAnalysis{
+                    Text("Analyzing Your Speech...")
+                        .padding()
+                        .border(Color.teal, width: 1)
+                    
+                    ProgressView()
+                }else{
+                    Text("Your personalized feedback will be pop up after the analysis.")
+                        .padding()
+                        .border(Color.teal, width: 1)
+                }
                 
                 
                 Spacer()
             }
             .sheet(isPresented: $showAnalysis) {
-                AnalysisResultView(analysisResult: $speechAnalysisResult)
+                AnalysisResultView(analysisResult: $speechAnalysisResult, transcriptResult: $transcriptResult)
             }
             .padding()
             
@@ -116,66 +125,53 @@ struct PracticeView: View {
     }
     
     func evaluateSpeech() {
+        loadingAnalysis = true
         guard let audioURL = audioRecorder.audioFileURL else { return }
         
         evaluateSpeech(from: audioURL) { result in
             switch result {
             case .success(let analysis):
                 DispatchQueue.main.async {
+  
+                    var feedback = ""
                     
-                    var resultString = "Speech Analysis:\n\n"  // Added extra line break
+                    feedback += "Disclaimer: Speech analysis is subjective and can vary based on many factors such as context, content, individual speaking style, and cultural norms. The following insights are intended to guide and assist in personal speech development, not as definitive evaluations."
                     
-                    resultString += "Disclaimer: Speech analysis is subjective and can vary based on many factors such as context, content, individual speaking style, and cultural norms. The following insights are intended to guide and assist in personal speech development, not as definitive evaluations.\n\n"
-
-
-                    // Filler Words
-                    resultString += "• Filler Words: You used filler words \(analysis.fillerWordCount) times.\n"
-                    resultString += analysis.fillerWordCount == 0 ? "  - Nice! Minimizing these makes your speech clearer.\n\n" : "  - Try to minimize these to make your speech clearer.\n\n"
-
-                    /*/ Average Pitch
-                    resultString += "• Pitch Variation: Your pitch variation was \(String(format: "%.2f", analysis.averagePitch)).\n"
-                    resultString += analysis.averagePitch > 0 ? "  - Good job on varying your pitch to keep the speech engaging.\n\n" : "  - Try to vary your pitch more to add expressiveness to your speech.\n\n"
-                    */
                     
-                    if analyzePitch{
+                    // Explanation for Filler Words
+                        feedback += "\n\n• Filler Words: You used filler words \(analysis.fillerWordCount) times.\n"
+                        feedback += analysis.fillerWordCount == 0 ? "This is great as it makes your speech clear and concise." : "Reducing these can make your speech more precise and impactful."
                         
-                        resultString += "• Pitch Variation Analysis:\n"
-                        resultString += "  - Minimum Pitch: \(String(format: "%.2f", analysis.minPitch)) Hz\n"
-                        resultString += "  - Maximum Pitch: \(String(format: "%.2f", analysis.maxPitch)) Hz\n"
-                        
-                        
-                        if analysis.maxPitch - analysis.minPitch > 0 {
-                            resultString += "  - Nice! A good range of pitch variation can add expressiveness to your speech.\n\n"
-                        } else {
-                            resultString += "  - Consider varying your pitch more for a dynamic speaking style.\n\n"
+                        // Explanation for Pitch Variation
+                        if analyzePitch {
+                            feedback += "\n\n• Pitch Variation: Your pitch varied between \(String(format: "%.2f", analysis.minPitch)) Hz and \(String(format: "%.2f", analysis.maxPitch)) Hz.\n"
+                            feedback += "A varied pitch keeps the audience engaged by expressing emotions and emphasizing points."
                         }
                         
-                    }
+                        // Explanation for Rate of Speech
+                        if analyzeRateOfSpeech {
+                            feedback += "\n\n• Speech Rate Variation: \(String(format: "%.2f", analysis.rateOfSpeechVariation)).\n"
+                            feedback += analysis.rateOfSpeechVariation > 1 ? "You vary your speaking rate well, which keeps the audience engaged." : "Your speaking rate is quite constant. Consider varying your speed for better engagement and emphasis."
+                        }
+                        
+                        // Explanation for Pause Usage
+                        if analyzePause {
+                            feedback += "\n\n• Pause Usage: Your average pause length was \(String(format: "%.2f", analysis.averagePauseLength)) seconds.\n"
+                            feedback += "Effective use of pauses allows key points to resonate with the audience and gives time for comprehension."
+                        }
                     
-                    if analyzeRateOfSpeech{
-                        
-                        // Rate of Speech Variation
-                        resultString += "• Speech Rate Variation: Your rate of speech varied with a standard deviation of \(String(format: "%.2f", analysis.rateOfSpeechVariation)).\n"
-                        resultString += analysis.rateOfSpeechVariation > 1 ? "  - Great! Varying your speaking rate can make your speech more engaging.\n\n" : "  - Try varying your speaking speed to maintain listener interest.\n\n"
-                        
-                    }
-
+                    self.speechAnalysisResult = feedback
+                    self.transcriptResult = analysis.transcript
                     
-                    if analyzePause{
-                        
-                        // Average Pause Length
-                        let formattedPauseLength = String(format: "%.2f", analysis.averagePauseLength)
-                        resultString += "• Pause Usage: Your average pause length was \(formattedPauseLength) seconds.\n"
-                        resultString += analysis.averagePauseLength > 1 ? "  - Great! Effective use of pauses can help emphasize points." : "  - Consider using pauses more effectively to emphasize your points."
-                        
-                    }
-                    
-                    self.speechAnalysisResult = resultString
+                    loadingAnalysis = false
                     self.showAnalysis = true
                 }
             case .failure(let error):
                 DispatchQueue.main.async {
+                     
                     self.speechAnalysisResult = "Please Try Recording Again. Error in analysis: \(error.localizedDescription)"
+                    
+                    self.loadingAnalysis = false
                     self.showAnalysis = true
                 }
             }

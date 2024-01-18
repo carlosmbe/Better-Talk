@@ -11,7 +11,7 @@ import Speech
 
 
 func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
-    var analysis = SpeechAnalysis()
+    var analysis = SpeechAnalysis(transcript: transcription.formattedString)
     
     // Filler words analysis
     var fillerWords = ["um", "uh", "like", "you know", "so", "actually", "basically", "I mean"]
@@ -69,6 +69,7 @@ func calculateVariation(_ rates: [Float]) -> Float {
 
 
 struct SpeechAnalysis {
+    var transcript: String
     var fillerWordCount: Int = 0
     var minPitch: Float = 0
     var maxPitch: Float = 0

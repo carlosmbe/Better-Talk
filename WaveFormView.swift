@@ -9,9 +9,6 @@ import AVFoundation
 import Combine
 import SwiftUI
 import AVFoundation
-import DSWaveformImage
-import DSWaveformImageViews
-
 
 struct VolumeBar: View {
     var level: CGFloat // Expected to be in the range 0...1
