@@ -11,18 +11,20 @@ import Speech
 
 
 func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
-    var analysis = SpeechAnalysis(transcript: transcription.formattedString)
+    var analysis = SpeechAnalysis(transcript: transcription.formattedString, fillerWordsCount: [:])
     
-    // Filler words analysis
-    var fillerWords = ["um", "uh", "like", "you know", "so", "actually", "basically", "I mean"]
-    analysis.fillerWordCount = transcription.segments.filter {
-        fillerWords.contains($0.substring.lowercased())
-    }.count
-
+    let fillerWords = ["um", "uh", "like", "you know", "so", "actually", "basically", "I mean"]
+    fillerWords.forEach { word in
+        let count = transcription.segments.filter { $0.substring.lowercased() == word }.count
+        analysis.fillerWordsCount[word] = count
+        analysis.totalFillerWords += count
+    }
+    
+    
     // Pitch and Rate of Speech analysis
     var totalPitch: Float = 0
     var speechRates: [Float] = []
-
+    
     var pitchValues: [Double] = []
     for segment in transcription.segments {
         
@@ -35,7 +37,7 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
             pitchValues += voiceAnalytics.pitch.acousticFeatureValuePerFrame.map { Double($0) }
         }
     }
-
+    
     if !pitchValues.isEmpty {
         analysis.minPitch = Float(pitchValues.min() ?? 0)
         analysis.maxPitch = Float(pitchValues.max() ?? 0)
@@ -44,8 +46,8 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
     analysis.averagePitch = totalPitch / Float(transcription.segments.count)
     
     analysis.rateOfSpeechVariation = speechRates.isEmpty ? 0 : calculateVariation(speechRates)
-
-
+    
+    
     // Pause analysis
     var pauseLengths: [TimeInterval] = []
     var lastSegmentEndTime: TimeInterval = 0
@@ -57,7 +59,7 @@ func analyzeTranscription(_ transcription: SFTranscription) -> SpeechAnalysis {
         lastSegmentEndTime = segment.timestamp + segment.duration
     }
     analysis.averagePauseLength = pauseLengths.isEmpty ? 0 : pauseLengths.reduce(0, +) / Double(pauseLengths.count)
-
+    
     return analysis
 }
 
@@ -70,7 +72,8 @@ func calculateVariation(_ rates: [Float]) -> Float {
 
 struct SpeechAnalysis {
     var transcript: String
-    var fillerWordCount: Int = 0
+    var fillerWordsCount: [String: Int]
+    var totalFillerWords: Int = 0
     var minPitch: Float = 0
     var maxPitch: Float = 0
     var averagePitch: Float = 0

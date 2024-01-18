@@ -139,8 +139,11 @@ struct PracticeView: View {
                     
                     
                     // Explanation for Filler Words
-                        feedback += "\n\n• Filler Words: You used filler words \(analysis.fillerWordCount) times.\n"
-                        feedback += analysis.fillerWordCount == 0 ? "This is great as it makes your speech clear and concise." : "Reducing these can make your speech more precise and impactful."
+                    feedback += "\n\n• Filler Words: Total used \(analysis.totalFillerWords) times"
+                    for (word, count) in analysis.fillerWordsCount where count > 0 {
+                        feedback += "\n  - '\(word)': used \(count) times"
+                    }
+                 
                         
                         // Explanation for Pitch Variation
                         if analyzePitch {
